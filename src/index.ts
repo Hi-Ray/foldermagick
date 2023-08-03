@@ -34,7 +34,7 @@ const config: IConfig = JSON.parse(rawConfig);
 //     console.error('No ffmpeg path found!');
 // }
 
-if (!config.workingDirectory) {
+if (!config.workingDirectory || config.workingDirectory === '') {
     console.error('No working directory in config!');
     process.exit(1);
 }
@@ -57,10 +57,11 @@ chokidar.watch(config.workingDirectory).on('all', (event, changePath) => {
     //console.log(event, changePath);
     switch (event) {
         case 'add':
-            const fileType = changePath.substring(0, changePath.lastIndexOf('/')).split('/').pop();
-            const filePath = changePath.substring(0, changePath.lastIndexOf('/'));
+            const fileType = changePath.substring(0, changePath.lastIndexOf(path.sep)).split(path.sep).pop();
+            const filePath = changePath.substring(0, changePath.lastIndexOf(path.sep));
 
-            const fileName = changePath.split('/').pop()?.split('.')[0];
+
+            const fileName = changePath.split(path.sep).pop()?.split('.')[0];
 
             if (fileType === changePath.split('.')[1]) {
                 console.log(`File type matches folder`);
