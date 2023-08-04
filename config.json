@@ -1,3 +1,4 @@
 {
-  "workingDirectory": ""
+  "watch": false,
+  "workingDirectory": "/Users/ray/WebstormProjects/foldermagick/test"
 }

@@ -1,5 +1,4 @@
 export default interface IConfig {
-    imageMagickPath: string;
-    ffmpegPath: string;
+    watch: boolean;
     workingDirectory: string;
 }

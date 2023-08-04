@@ -12,8 +12,7 @@ console.log('Starting FolderMagick...');
 const magick = IM.subClass({ imageMagick: '7+' });
 
 const defaultConfig = {
-    imageMagickPath: '',
-    ffmpegPath: '',
+    watch: true,
     workingDirectory: '',
 };
 
@@ -53,30 +52,52 @@ imageFormats.forEach((folder) => {
     }
 });
 
-chokidar.watch(config.workingDirectory).on('all', (event, changePath) => {
-    //console.log(event, changePath);
-    switch (event) {
-        case 'add':
-            const fileType = changePath.substring(0, changePath.lastIndexOf(path.sep)).split(path.sep).pop();
-            const filePath = changePath.substring(0, changePath.lastIndexOf(path.sep));
+if (config.watch) {
+    chokidar.watch(config.workingDirectory).on('all', (event, changePath) => {
+        //console.log(event, changePath);
+        switch (event) {
+            case 'add':
+                const fileType = changePath.substring(0, changePath.lastIndexOf(path.sep)).split(path.sep).pop();
+                const filePath = changePath.substring(0, changePath.lastIndexOf(path.sep));
 
+                const fileName = changePath.split(path.sep).pop()?.split('.')[0];
 
-            const fileName = changePath.split(path.sep).pop()?.split('.')[0];
-
-            if (fileType === changePath.split('.')[1]) {
-                console.log(`File type matches folder`);
-                break;
-            }
-
-            magick(changePath).write(path.join(filePath, `${fileName}.${fileType}`), (err) => {
-                if (err) {
-                    console.error(err);
-                    return;
+                if (fileType === changePath.split('.')[1]) {
+                    console.log(`File type matches folder`);
+                    break;
                 }
 
-                fs.unlinkSync(changePath);
-                console.log(`Wrote to ${path.join(filePath, `${fileName}.${fileType}`)}`);
+                magick(changePath).write(path.join(filePath, `${fileName}.${fileType}`), (err) => {
+                    if (err) {
+                        return;
+                    }
+
+                    fs.unlinkSync(changePath);
+                    console.log(`Wrote to ${path.join(filePath, `${fileName}.${fileType}`)}`);
+                });
+                break;
+        }
+    });
+} else {
+    imageFormats.forEach((format) => {
+        const folder = path.join(config.workingDirectory, format);
+
+        const files = fs.readdirSync(folder);
+
+        files.forEach((file) => {
+            if (file.endsWith(format)) {
+                return;
+            }
+
+            const fileWithoutExt = path.join(folder, file).split('.')[0];
+
+            magick(path.join(path.join(folder, file))).write(path.join(`${fileWithoutExt}.${format}`), (err) => {
+                if (err) {
+                    return;
+                }
+                console.log(`Wrote: ${path.join(folder, `${fileWithoutExt}.${format}`)}`);
+                fs.unlinkSync(path.join(folder, file));
             });
-            break;
-    }
-});
+        });
+    });
+}
